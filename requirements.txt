@@ -1,0 +1,8 @@
+text
+google-generativeai
+edge-tts
+moviepy==1.0.3
+requests
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
