@@ -1,0 +1,29 @@
+yaml
+name: Viral_Video_Machine
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg imagemagick
+          pip install google-generativeai edge-tts moviepy==1.0.3 requests google-api-python-client google-auth-oauthlib
+      - name: Run
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CLIENT_SECRET_JSON: ${{ secrets.CLIENT_SECRET_JSON }}
+        run: python main.py
+      - name: Save Video
+        uses: actions/upload-artifact@v4
+        with:
+          name: Viral-Short
+          path: short.mp4
