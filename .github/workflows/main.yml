@@ -1,6 +1,8 @@
 name: Viral_Video_Machine
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 10 * * *' # Rozana subah 10 AM GMT par chalega
 
 jobs:
   build:
@@ -24,12 +26,12 @@ jobs:
         run: |
           pip install google-generativeai edge-tts moviepy==1.0.3 requests
 
-      - name: Run Script
+      - name: Run AI Machine
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python main.py
 
-      - name: Save Video
+      - name: Save Video Result
         uses: actions/upload-artifact@v4
         with:
           name: AI-Viral-Short
