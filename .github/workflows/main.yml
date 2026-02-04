@@ -32,3 +32,5 @@ jobs:
       - name: Save Video
         uses: actions/upload-artifact@v4
         with:
+          name: AI-Viral-Short
+          path: viral_short.mp4
