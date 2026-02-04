@@ -1,4 +1,3 @@
-python
 import os, asyncio, requests
 import google.generativeai as genai
 from edge_tts import Communicate
@@ -34,6 +33,3 @@ async def make_viral_video():
     final = concatenate_videoclips(clips, method="compose").set_audio(audio)
     final.write_videofile("viral_short.mp4", fps=24, codec="libx264")
     print("✅ Machine Task Completed!")
-
-if __name__ == "__main__":
-    asyncio.run(make_viral_video())
