@@ -1,47 +1,39 @@
 python
-import os, asyncio, json, requests
+import os, asyncio, requests
 import google.generativeai as genai
 from edge_tts import Communicate
 from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
 
-# 1. SETUP
+# 1. AI Setup
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
-JSON_DATA = os.getenv("CLIENT_SECRET_JSON")
 genai.configure(api_key=GEMINI_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-async def run_machine():
-    # A. TREND FINDER & SCRIPT
-    print("🔍 Finding trending topic and writing script...")
-    prompt = "Find a trending high-retention viral topic for YouTube Shorts. Write a 30-second script in Hindi. Give me 3 facts. Format: Fact 1, Fact 2, Fact 3."
+async def make_viral_video():
+    print("🌐 Finding trending topics...")
+    # Machine khud dhoondegi ke aaj kal kya trend chal raha hai
+    prompt = "Identify a trending viral topic for YouTube Shorts right now (e.g., Space, AI, Life Hacks, or Mystery). Write a 30-second script in Hindi about it. Give 3 mind-blowing facts. Format: Fact 1, Fact 2, Fact 3. No extra text."
     res = model.generate_content(prompt)
-    facts = [f.strip() for f in res.text.split('\n') if len(f) > 10][:3]
+    facts = [f.strip() for f in res.text.split('\n') if len(f) > 5][:3]
     
-    # B. VOICEOVER
-    print("🎙️ Creating Voice...")
-    script_text = " . ".join(facts)
-    await Communicate(script_text, "hi-IN-MadhurNeural").save("v.mp3")
-    audio = AudioFileClip("v.mp3")
+    print(f"🎙️ Topic found! Creating voiceover...")
+    full_script = " . ".join(facts)
+    await Communicate(full_script, "hi-IN-MadhurNeural").save("voice.mp3")
+    audio = AudioFileClip("voice.mp3")
 
-    # C. IMAGES
-    print("🖼️ Generating Images...")
+    print("🖼️ Generating AI Images for each fact...")
     clips = []
     dur = audio.duration / len(facts)
     for i, t in enumerate(facts):
-        img = requests.get(f"https://pollinations.ai/p/{t.replace(' ','_')}?width=1080&height=1920&seed={i}").content
-        open(f"{i}.jpg", "wb").write(img)
+        # AI se HD 9:16 (Shorts size) image lena
+        img_url = f"https://pollinations.ai/p/{t.replace(' ','_')}?width=1080&height=1920&seed={i}"
+        with open(f"{i}.jpg", "wb") as f: f.write(requests.get(img_url).content)
         clips.append(ImageClip(f"{i}.jpg").set_duration(dur).set_fps(24))
 
-    # D. ASSEMBLE VIDEO
-    print("🎬 Making Video...")
+    print("🎬 Assembling Final Video...")
     final = concatenate_videoclips(clips, method="compose").set_audio(audio)
-    final.write_videofile("short.mp4", fps=24, codec="libx264")
-
-    # E. YOUTUBE UPLOAD (Simplified)
-    print("🚀 Video is ready! Manual step needed for first-time login...")
+    final.write_videofile("viral_short.mp4", fps=24, codec="libx264")
+    print("✅ Machine Task Completed!")
 
 if __name__ == "__main__":
-    asyncio.run(run_machine())
+    asyncio.run(make_viral_video())
