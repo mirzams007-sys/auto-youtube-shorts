@@ -2,7 +2,7 @@ name: Viral_Video_Machine
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 10 * * *' # Rozana subah 10 AM GMT par chalega
+    - cron: '0 10 * * *'
 
 jobs:
   build:
@@ -14,7 +14,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.10' # Naya Version
 
       - name: Install System Tools
         run: |
@@ -22,9 +22,9 @@ jobs:
           sudo apt-get install -y ffmpeg imagemagick
           sudo sed -i 's/domain="path" rights="none" pattern="@\*"/domain="path" rights="read|write" pattern="@\*"/g' /etc/ImageMagick-6/policy.xml
 
-      - name: Install Python Packages
+      - name: Install New Python Packages
         run: |
-          pip install google-generativeai edge-tts moviepy==1.0.3 requests
+          pip install google-genai edge-tts moviepy==1.0.3 requests
 
       - name: Run AI Machine
         env:
