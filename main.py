@@ -1,62 +1,65 @@
-import os, asyncio, requests, json
+import os
+import asyncio
+import requests
 from edge_tts import Communicate
-from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips
+from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips, TextClip, CompositeVideoClip
 
-# API Setup
+# 1. API Setup (Direct Method - No Library Needed)
 API_KEY = os.getenv("GEMINI_API_KEY")
 
-def get_ai_script():
-    """Direct API call - No Google library needed"""
+def get_fact():
+    """Google Gemini se fact mangwane ka direct tareeka"""
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
     headers = {'Content-Type': 'application/json'}
     payload = {
         "contents": [{
-            "parts": [{"text": "Write 2 short viral space facts in Hindi. Just facts, no intro."}]
+            "parts": [{"text": "Tell me one interesting viral fact about space in Hindi. Under 20 words. No intro."}]
         }]
     }
     
     try:
         response = requests.post(url, headers=headers, json=payload)
         data = response.json()
-        # AI se text nikalna
         text = data['candidates'][0]['content']['parts'][0]['text']
-        return text
+        return text.strip()
     except Exception as e:
-        print(f"⚠️ AI API Error: {e}")
-        return "Antariksh bilkul shant hai. Fact 1: Antariksh mein koi awaz nahi hoti. Fact 2: Suraj ke andar 10 lakh prithvi sama sakti hain."
+        print(f"⚠️ API Error: {e}")
+        return "Antariksh mein awaaz nahi hoti kyunki wahan hawa nahi hai."
 
-async def start_machine():
-    try:
-        print("📝 Step 1: Getting Script (Direct Method)...")
-        script = get_ai_script()
-        facts = [f.strip() for f in script.split('\n') if len(f) > 5][:2]
-        print(f"✅ Script Ready!")
+async def make_video():
+    print("🚀 Machine Start ho gayi hai...")
 
-        print("🎙️ Step 2: Generating Voice...")
-        full_text = " . ".join(facts)
-        await Communicate(full_text, "hi-IN-MadhurNeural").save("v.mp3")
-        audio = AudioFileClip("v.mp3")
+    # Step 1: Content
+    text = get_fact()
+    print(f"📝 Text: {text}")
 
-        print("🖼️ Step 3: Generating Images...")
-        clips = []
-        dur = audio.duration / len(facts)
-        for i, t in enumerate(facts):
-            # Clean text for URL
-            clean_t = "".join(e for e in t if e.isalnum() or e.isspace())
-            url = f"https://pollinations.ai/p/{clean_t.replace(' ','_')}?width=1080&height=1920&seed={i}"
-            img_data = requests.get(url).content
-            with open(f"{i}.jpg", "wb") as f: f.write(img_data)
-            clips.append(ImageClip(f"{i}.jpg").set_duration(dur).set_fps(24))
+    # Step 2: Audio (Voice)
+    print("🎙️ Audio ban raha hai...")
+    await Communicate(text, "hi-IN-MadhurNeural").save("audio.mp3")
+    audio = AudioFileClip("audio.mp3")
 
-        print("🎬 Step 4: Finalizing Video...")
-        final_video = "viral_short.mp4"
-        clip = concatenate_videoclips(clips, method="compose").set_audio(audio)
-        clip.write_videofile(final_video, fps=24, codec="libx264", audio_codec="aac")
-        print("✅ ALL DONE!")
-        
-    except Exception as e:
-        print(f"❌ Final Error: {e}")
-        raise e
+    # Step 3: Image (AI Image)
+    print("🖼️ Image ban rahi hai...")
+    search_term = text.split()[0] # Pehla shabd use karega image ke liye
+    image_url = f"https://pollinations.ai/p/space_galaxy_{search_term}?width=1080&height=1920"
+    img_data = requests.get(image_url).content
+    with open("image.jpg", "wb") as f:
+        f.write(img_data)
+
+    # Step 4: Editing
+    print("🎬 Video edit ho rahi hai...")
+    # Image Clip
+    clip = ImageClip("image.jpg").set_duration(audio.duration + 1)
+    
+    # Text Overlay (Simple)
+    txt_clip = TextClip(text, fontsize=50, color='white', font='DejaVu-Sans-Bold', size=(1000, None), method='caption')
+    txt_clip = txt_clip.set_position('center').set_duration(audio.duration + 1)
+
+    # Final Combine
+    final = CompositeVideoClip([clip, txt_clip]).set_audio(audio)
+    final.write_videofile("viral_short.mp4", fps=24, codec="libx264", audio_codec="aac")
+    
+    print("✅ Video Taiyar hai! Download karein.")
 
 if __name__ == "__main__":
-    asyncio.run(start_machine())
+    asyncio.run(make_video())
