@@ -1,4 +1,4 @@
-name: Viral_Video_Machine
+name: Viral_Shorts_Machine
 on:
   workflow_dispatch:
 
@@ -12,22 +12,23 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.10'
 
-      - name: Install Tools
+      - name: Install Libraries
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg imagemagick
-          sudo sed -i 's/domain="path" rights="none" pattern="@\*"/domain="path" rights="read|write" pattern="@\*"/g' /etc/ImageMagick-6/policy.xml
-          pip install edge-tts moviepy==1.0.3 requests
+          # Fix ImageMagick Policy for Text
+          sudo sed -i 's/none/read,write/g' /etc/ImageMagick-6/policy.xml
+          pip install requests edge-tts moviepy==1.0.3
 
-      - name: Run Machine
+      - name: Run Generator
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python main.py
 
-      - name: Save Video
+      - name: Upload Video
         uses: actions/upload-artifact@v4
         with:
-          name: AI-Viral-Short
+          name: Final_Video
           path: viral_short.mp4
