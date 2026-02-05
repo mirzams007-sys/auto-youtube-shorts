@@ -20,7 +20,7 @@ jobs:
           sudo apt-get install -y ffmpeg imagemagick
           # Fix ImageMagick Policy for Text
           sudo sed -i 's/none/read,write/g' /etc/ImageMagick-6/policy.xml
-          pip install requests edge-tts moviepy==1.0.3
+          pip install edge-tts moviepy==1.0.3 requests pillow
 
       - name: Run Generator
         env:
