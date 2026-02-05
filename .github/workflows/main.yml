@@ -1,6 +1,8 @@
-name: Viral_Shorts_Machine
+name: Viral_Auto_Machine
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: '*/30 * * * *'  # Har 30 minute mein chalega
+  workflow_dispatch:        # Button dabane par bhi chalega
 
 jobs:
   build:
@@ -18,7 +20,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg imagemagick
-          # Fix ImageMagick Policy for Text
           sudo sed -i 's/none/read,write/g' /etc/ImageMagick-6/policy.xml
           pip install edge-tts moviepy==1.0.3 requests pillow
 
@@ -30,5 +31,5 @@ jobs:
       - name: Upload Video
         uses: actions/upload-artifact@v4
         with:
-          name: Final_Video
+          name: Viral_Short
           path: viral_short.mp4
