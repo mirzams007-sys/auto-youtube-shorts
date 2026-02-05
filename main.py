@@ -39,27 +39,26 @@ async def make_video():
     audio = AudioFileClip("audio.mp3")
 
     # Step 3: Image (AI Image)
-    print("🖼️ Image ban rahi hai...")
-    search_term = text.split()[0] # Pehla shabd use karega image ke liye
-    image_url = f"https://pollinations.ai/p/space_galaxy_{search_term}?width=1080&height=1920"
-    img_data = requests.get(image_url).content
-    with open("image.jpg", "wb") as f:
-        f.write(img_data)
-
-    # Step 4: Editing
-    print("🎬 Video edit ho rahi hai...")
-    # Image Clip
-    clip = ImageClip("image.jpg").set_duration(audio.duration + 1)
-    
-    # Text Overlay (Simple)
-    txt_clip = TextClip(text, fontsize=50, color='white', font='DejaVu-Sans-Bold', size=(1000, None), method='caption')
-    txt_clip = txt_clip.set_position('center').set_duration(audio.duration + 1)
-
-    # Final Combine
-    final = CompositeVideoClip([clip, txt_clip]).set_audio(audio)
-    final.write_videofile("viral_short.mp4", fps=24, codec="libx264", audio_codec="aac")
-    
-    print("✅ Video Taiyar hai! Download karein.")
-
-if __name__ == "__main__":
-    asyncio.run(make_video())
+    print("🖼️ Step 3: Generating Images...")
+        clips = []
+        dur = audio.duration / len(facts)
+        for i, t in enumerate(facts):
+            # URL fix aur Safai
+            clean_t = "".join(e for e in t if e.isalnum())
+            # Naya URL jo fast hai aur direct image deta hai
+            url = f"https://image.pollinations.ai/prompt/space_fact_{clean_t}?width=1080&height=1920&nologo=true"
+            
+            # Request bhejna
+            response = requests.get(url)
+            
+            # Check karna ke image aayi ya nahi
+            if response.status_code == 200:
+                with open(f"{i}.jpg", "wb") as f: 
+                    f.write(response.content)
+                # Image ko clip banana
+                clips.append(ImageClip(f"{i}.jpg").set_duration(dur).set_fps(24))
+            else:
+                # Agar image fail ho jaye to Black Screen laga dega (Error nahi dega)
+                print(f"⚠️ Image {i} fail ho gayi, color use kar rahe hain.")
+                from moviepy.editor import ColorClip
+                clips.append(ColorClip(size=(1080, 1920), color=(0,0,0)).set_duration(dur).set_fps(24))
